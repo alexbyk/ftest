@@ -6,7 +6,7 @@
 
 # Documentation:
 - [ftest](https://godoc.org/github.com/alexbyk/ftest)
-- [fclient](https://godoc.org/github.com/alexbyk/ftest)
+- [fclient](https://godoc.org/github.com/alexbyk/ftest/fclient)
 
 # Installation
 ```
