@@ -4,6 +4,7 @@
 - `ftest` is a simple and easy to use go testing library with fluent design and exact failure messages.
 - `fclient` is a simple http testing client, based on `ftest`.
 
+![GIF Demo](https://raw.github.com/alexbyk/ftest/master/demo.gif)
 # Documentation:
 - [ftest](https://godoc.org/github.com/alexbyk/ftest)
 - [fclient](https://godoc.org/github.com/alexbyk/ftest/fclient)
