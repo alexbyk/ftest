@@ -1,35 +1,43 @@
 /*Package fclient provides a testing client for http handlers.
 
-It supports simple cookie storage, so can be used to test sites with sign-in functionality
+To use it, you should write a testable app. You need to pass an object which implements http.Handler (has a ServeHTTP method)
+to the client
 
-  func hello(w http.ResponseWriter, r *http.Request) {
+  package app_test
+
+  import (
+    "fmt"
+    "net/http"
+    "testing"
+
+    "github.com/alexbyk/ftest/fclient"
+  )
+
+  type MyApp struct{}
+
+  func (app MyApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte(`{"foo": "bar"}`))
   }
 
   func Test_hello(t *testing.T) {
-    cl := fclient.New(t, hello)
+    app := MyApp{}
+    cl := fclient.New(t, app)
 
-    res := cl.Get("/hello").CodeEq(200).
+    cl.Get("/hello").CodeEq(200).
       BodyContains("bar").
       JSONEq(`{"foo":"bar"}`)
 
+    // using response directly
+    res := cl.Get("/hello")
     fmt.Println(res.Body)
   }
 
-To test your final app with multiple routes/framework, use the following example(gin)
+You can also transform a simple function into http.Handler interface using http.HandlerFunc adapter
 
-  func TestGin(t *testing.T) {
-
-    // app
-    app := gin.New()
-    app.GET("/foo", func(c *gin.Context) {
-      c.String(200, "Foo")
-    })
-
-    // test
-    cl := fclient.New(t, app.ServeHTTP)
-    cl.Get("/foo").BodyEq("Foo")
-  }
+  fn := func(w http.ResponseWriter, r *http.Request) {}
+  cl := fclient.New(t, http.HandlerFunc(fn))
+  cl.Get("/")
+  // ...
 
 */
 package fclient
@@ -56,8 +64,10 @@ type test interface {
 
 // Client is a struct which holds current test, LastResponse and LastRequest instances
 type Client struct {
-	t       test
-	handler http.HandlerFunc
+	t test
+
+	// handler is an instance of http.Handler
+	Handler http.Handler
 
 	// DefaultHeaders is a map for default headers
 	DefaultHeaders map[string]string
@@ -67,13 +77,13 @@ type Client struct {
 }
 
 // New builds a new http testing client
-func New(t test, handler http.HandlerFunc) *Client {
+func New(t test, handler http.Handler) *Client {
 	t.Helper()
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &Client{t: t, Jar: jar, handler: handler,
+	return &Client{t: t, Jar: jar, Handler: handler,
 		DefaultHeaders: map[string]string{},
 	}
 }
@@ -107,7 +117,10 @@ func urlFromReq(req *http.Request) *url.URL {
 func (cl *Client) Do(req *http.Request) *Response {
 	cl.t.Helper()
 	resp := &Response{ResponseRecorder: httptest.NewRecorder(), t: cl.t}
-	cl.handler(resp, req)
+	if cl.Handler == nil {
+		cl.t.Fatalf("Attempt to invoke ServeHTTP on nil Handler")
+	}
+	cl.Handler.ServeHTTP(resp, req)
 	jar := cl.Jar
 	if jar == nil {
 		return resp

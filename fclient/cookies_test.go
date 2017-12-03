@@ -8,8 +8,8 @@ import (
 	"github.com/alexbyk/ftest/fclient"
 )
 
-func makeHandlerCookie(name string, cookie *http.Cookie) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func makeHandlerCookie(name string, cookie *http.Cookie) http.HandlerFunc {
+	var fn http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/get":
 			c, _ := r.Cookie(name)
@@ -26,6 +26,8 @@ func makeHandlerCookie(name string, cookie *http.Cookie) func(http.ResponseWrite
 			panic("unexpected: " + r.URL.Path)
 		}
 	}
+
+	return fn
 
 }
 

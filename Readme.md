@@ -4,7 +4,6 @@
 - `ftest` is a simple and easy to use go testing library with fluent design and exact failure messages.
 - `fclient` is a simple http testing client, based on `ftest`.
 
-![GIF Demo](https://raw.github.com/alexbyk/ftest/master/demo.gif)
 # Documentation:
 - [ftest](https://godoc.org/github.com/alexbyk/ftest)
 - [fclient](https://godoc.org/github.com/alexbyk/ftest/fclient)
@@ -12,11 +11,6 @@
 # Installation
 ```
 go get -u github.com/alexbyk/ftest
-```
-
-or
-```
-dep ensure --add github.com/alexbyk/ftest
 ```
 
 # Usage
@@ -43,6 +37,7 @@ ft := ftest.NewLabel(t, "MyLabel")
 
 ## fclient
 ```go
+package app_test
 
 import (
   "fmt"
@@ -52,37 +47,23 @@ import (
   "github.com/alexbyk/ftest/fclient"
 )
 
-func hello(w http.ResponseWriter, r *http.Request) {
+type MyApp struct{}
+
+func (app MyApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   w.Write([]byte(`{"foo": "bar"}`))
 }
 
 func Test_hello(t *testing.T) {
-  cl := fclient.New(t, hello)
+  app := MyApp{}
+  cl := fclient.New(t, app)
 
   cl.Get("/hello").CodeEq(200).
     BodyContains("bar").
     JSONEq(`{"foo":"bar"}`)
 
-  // using response directly
+  // using a response directly
   res := cl.Get("/hello")
   fmt.Println(res.Body)
-}
-
-```
-
-### How to use with multiple routes/framework app
-You should provide a main `http.HandlerFunc` function, for example with `gin` it will be something like this:
-```go
-func TestGin(t *testing.T) {
-  // app
-  app := gin.New()
-  app.GET("/foo", func(c *gin.Context) {
-    c.String(200, "Foo")
-  })
-
-  // test
-  cl := fclient.New(t, app.ServeHTTP)
-  cl.Get("/foo").BodyEq("Foo")
 }
 ```
 

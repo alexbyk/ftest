@@ -10,9 +10,10 @@ import (
 )
 
 func Test_Request(t *testing.T) {
-	cl := fclient.New(t, func(w http.ResponseWriter, r *http.Request) {
+	var fn http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(r.Method + " " + r.URL.String()))
-	})
+	}
+	cl := fclient.New(t, fn)
 	ass := ftest.New(t)
 	ass.Eq(cl.Get("http://foo.bar/baz").Body.String(), "GET http://foo.bar/baz")
 
@@ -39,6 +40,14 @@ func Test_BodyContains(t *testing.T) {
 	cl, mt := buildClientMt(t, makeBodyResp(201, "Foo"))
 	mt.ShouldFail("BodyContains", func() { cl.Get("/").BodyContains("ar") })
 	mt.ShouldPass(func() { cl.Get("/").BodyContains("oo") })
+}
+
+func Test_Handler(t *testing.T) {
+	mt := internal.NewMock(t)
+	cl := fclient.New(mt, nil)
+	mt.ShouldFail("nil Handler", func() { cl.Get("/foo") })
+	cl.Handler = makeBodyResp(200, "hello")
+	mt.ShouldPass(func() { cl.Get("/foo").BodyEq("hello") })
 }
 
 func Test_JSONEq(t *testing.T) {
@@ -106,7 +115,7 @@ func Test_JSONEq(t *testing.T) {
 }
 
 func Test_DefaultHeaders(t *testing.T) {
-	cl := fclient.New(t, func(w http.ResponseWriter, r *http.Request) {})
+	cl := fclient.New(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	ft := ftest.New(t)
 	cl.DefaultHeaders["foo"] = "FOO"
 	req := cl.NewRequest("GET", "/", nil)
