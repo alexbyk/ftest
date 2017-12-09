@@ -116,7 +116,7 @@ func urlFromReq(req *http.Request) *url.URL {
 // will be cleared
 func (cl *Client) Do(req *http.Request) *Response {
 	cl.t.Helper()
-	resp := &Response{ResponseRecorder: httptest.NewRecorder(), t: cl.t}
+	resp := NewResponse(cl.t)
 	if cl.Handler == nil {
 		cl.t.Fatalf("Attempt to invoke ServeHTTP on nil Handler")
 	}
@@ -160,6 +160,11 @@ func (cl *Client) NewRequest(method, path string, body io.Reader) *http.Request 
 type Response struct {
 	*httptest.ResponseRecorder
 	t test
+}
+
+// NewResponse returns a Response object with default ResponseRecorder
+func NewResponse(t test) *Response {
+	return &Response{t: t, ResponseRecorder: httptest.NewRecorder()}
 }
 
 // CodeEq checks if a response code is equal to
