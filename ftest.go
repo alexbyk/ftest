@@ -4,7 +4,10 @@ It uses a fluent desing. It stops a test on the first failure
 
 	ftest.New(t).Eq(2, 2).
 		Contains("FooBarBaz", "Bar").
-		PanicsSubstr(func() { panic("Foo") }, "Foo")
+    PanicsSubstr(func() { panic("Foo") }, "Foo")
+
+Also to make testing simpler, this package performs extra nil checks, so nil, non initialized slice and empty pointer
+- all will be considered equal (and that's what you are expecting)
 */
 package ftest
 
@@ -38,6 +41,7 @@ func New(t test) *Assertion {
 	return NewLabel(t, "Assertion")
 }
 
+// TODO: avoid defer/recover by checking a kind
 func isNil(v interface{}) (ret bool) {
 	defer func() { recover() }()
 	ret = reflect.ValueOf(v).IsNil()
@@ -50,10 +54,24 @@ func (ass *Assertion) NotEq(got, expected interface{}) *Assertion {
 	return ass.NotEqf(got, expected, "are equal: %v(%v)", reflect.TypeOf(got), got)
 }
 
+func (ass *Assertion) deepEq(got, expected interface{}) bool {
+	ass.t.Helper()
+	gotV := reflect.ValueOf(got)
+	expectedV := reflect.ValueOf(expected)
+	switch {
+	case !gotV.IsValid():
+		return !expectedV.IsValid() || isNil(expected)
+	case !expectedV.IsValid():
+		return !gotV.IsValid() || isNil(got)
+	}
+
+	return reflect.DeepEqual(got, expected) || isNil(got) && isNil(expected)
+}
+
 // NotEqf is an f version of NotEq
 func (ass *Assertion) NotEqf(got, expected interface{}, format string, args ...interface{}) *Assertion {
 	ass.t.Helper()
-	if reflect.DeepEqual(got, expected) {
+	if ass.deepEq(got, expected) {
 		ass.fail(format, args...)
 	}
 	return ass
@@ -77,7 +95,7 @@ func (ass *Assertion) Eq(got, expected interface{}) *Assertion {
 // Eqf is an f version of Eq
 func (ass *Assertion) Eqf(got, expected interface{}, format string, args ...interface{}) *Assertion {
 	ass.t.Helper()
-	if !reflect.DeepEqual(got, expected) {
+	if !ass.deepEq(got, expected) {
 		ass.fail(format, args...)
 	}
 	return ass

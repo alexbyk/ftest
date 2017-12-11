@@ -32,9 +32,15 @@ func Test_Eq(t *testing.T) {
 
 	// nil pointers
 	var nilArr []rune
+	var nilPtr *[]rune
 	mt.ShouldFail("*nil*", func() { ass.Eq([]rune{}, nilArr) })
 	mt.ShouldFail("*nil*", func() { ass.Eq(nilArr, []rune{}) })
 	mt.ShouldPass(func() { ass.Eq(nilArr, nilArr) })
+	mt.ShouldPass(func() { ass.Eq(nilPtr, nil) })
+	mt.ShouldPass(func() { ass.Eq(nilArr, nil) })
+	mt.ShouldPass(func() { ass.Eq(nil, nil) })
+	mt.ShouldPass(func() { ass.Eq(nil, nilPtr) })
+	mt.ShouldPass(func() { ass.Eq(nil, nilArr) })
 }
 
 func Test_Contains(t *testing.T) {
@@ -54,14 +60,23 @@ func Test_PanicsSubstr(t *testing.T) {
 }
 
 func Test_TrueFalseNilNotNil(t *testing.T) {
+
+	// nil pointers
+	var nilArr []rune
+	var nilPtr *[]rune
+
 	ass, mt := buildAssMt(t)
 	mt.ShouldFail("true", func() { ass.True(false) })
 	mt.ShouldFail("false", func() { ass.False(true) })
 	mt.ShouldFail("nil", func() { ass.Nil(33) })
 	mt.ShouldFail("nil", func() { ass.NotNil(nil) })
+	mt.ShouldFail("nil", func() { ass.NotNil(nilPtr) })
+	mt.ShouldFail("nil", func() { ass.NotNil(nilArr) })
 	mt.ShouldPass(func() { ass.True(true) })
 	mt.ShouldPass(func() { ass.False(false) })
 	mt.ShouldPass(func() { ass.Nil(nil) })
+	mt.ShouldPass(func() { ass.Nil(nilArr) })
+	mt.ShouldPass(func() { ass.Nil(nilPtr) })
 	mt.ShouldPass(func() { ass.NotNil(0) })
 	var inil interface{}
 	mt.ShouldPass(func() { ass.Nil(inil) })
