@@ -129,7 +129,7 @@ func (ass *Assertion) PanicsSubstr(fn func(), substr string) (ret *Assertion) {
 		ass.t.Helper()
 		e := recover()
 		if e == nil {
-			ass.fail("Function %#v didn't panic as expected", fn)
+			ass.fail("Function didn't panic as expected")
 		}
 		errStr := fmt.Sprintf("%s", e)
 		if !strings.Contains(errStr, substr) {
