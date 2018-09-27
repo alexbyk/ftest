@@ -43,6 +43,17 @@ func Test_Eq(t *testing.T) {
 	mt.ShouldPass(func() { ass.Eq(nil, nilArr) })
 }
 
+func Test_Eq_int(t *testing.T) {
+	ass, mt := buildAssMt(t)
+	mt.ShouldPass(func() { ass.Eq(2, int64(2)) })
+	mt.ShouldPass(func() { ass.Eq(int64(2), 2) })
+	mt.ShouldPass(func() { ass.Eq(int64(-2), -2) })
+	mt.ShouldPass(func() { ass.Eq(uint64(2), 2) })
+
+	mt.ShouldFail("-2", func() { ass.Eq(uint64(2), -2) })
+	mt.ShouldFail("string", func() { ass.Eq(33, "33") })
+}
+
 func Test_Contains(t *testing.T) {
 	ass, mt := buildAssMt(t)
 	mt.ShouldPass(func() { ass.Contains("Foo", "oo") })

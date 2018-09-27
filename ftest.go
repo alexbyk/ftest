@@ -65,6 +65,18 @@ func (ass *Assertion) deepEq(got, expected interface{}) bool {
 		return !gotV.IsValid() || isNil(got)
 	}
 
+	// Compare values that may be integers to avoid annoying Eq(v, int64(v))
+	// TODO: make this deeply
+	switch gotV := got.(type) {
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		switch expectedV := expected.(type) {
+		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+			return fmt.Sprintf("%v", gotV) == fmt.Sprintf("%v", expectedV)
+		default:
+			return false // if one is integer, and another isn't, return false
+		}
+	}
+
 	return reflect.DeepEqual(got, expected) || isNil(got) && isNil(expected)
 }
 
