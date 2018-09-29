@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.1 (2018-09-29)
+- Improve integer checks to match without types
+
 ## v0.2.2 (2017-12-09)
 - Improved nil checks
 - Added fclient.NewResponse builder function
