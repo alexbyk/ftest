@@ -68,4 +68,4 @@ func Test_hello(t *testing.T) {
 ```
 
 # Copyright
-Copyright 2017, [alexbyk.com](https://alexbyk.com)
+Copyright 2018, [alexbyk.com](https://alexbyk.com)
